@@ -1,0 +1,1 @@
+C:\ProgramData\Chocolatey\bin\choco.exe source add -n=vc3protected -s"https://www.myget.org/F/vc3-choco-protected/auth/c1f6fbb4-259f-4b72-bdcf-7dfd14a47875/api/v2" --priority=20

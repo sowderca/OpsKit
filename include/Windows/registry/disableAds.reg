@@ -1,0 +1,51 @@
+Windows Registry Editor Version 5.00
+
+; Settings related to VC3's managed windows workstations
+; ======================================================
+
+; Disables 'Personal' OneDrive but not OneDrive for business
+[HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Office\16.0\Common\SignIn]
+"SignInOptions"=dword:00000002
+
+
+; Windows 10 v1703 (Creator's Update) - Ad removal registry settings
+; ==================================================================
+
+; Disables the Windows Spotlight on the lockscreen
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\CloudContent]
+"DisableWIndowsSpoltlightFeatures"=dword:00000000
+
+; Disables Cortona's Web access
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Search]
+"ConnectedSearchUseWeb"=dword:00000000
+
+
+; **BROKEN** Disables File 'Personal' OneDrive
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\OneDrive]
+"DisablePersonalSync"=dword:00000001
+
+; Disables the use of OneDrive.
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\OneDrive]
+"DisableFileSyncNGSC"=dword:00000001
+
+; Disables the use of OneDrive on Windows 8.1
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\OneDrive]
+"DisableFileSync"=dword:00000001
+
+; Disables the Lock Screen Ads, Start Menu Adds, App suggestions
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"FeatureManagementEnabled"=dword:00000000
+"OemPreInstalledAppsEnabled"=dword:00000000
+"RotatingLockScreenEnabled"=dword:00000000
+"RotatingLockScreenOverlayEnabled"=dword:00000000
+"SilentInstalledAppsEnabled"=dword:00000001
+"SoftLandingEnabled"=dword:00000000
+"SystemPaneSuggestionsEnabled"=dword:00000000
+"PreInstalledAppsEnabled"=dword:00000000
+"SubscribedContentEnabled"=dword:00000001
+"PreInstalledAppsEverEnabled"=dword:00000001
+"ContentDeliveryAllowed"=dword:00000001
+
+; One Drive Ads in File Explorer
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"ShowSyncProviderNotifications"=dword:00000000
