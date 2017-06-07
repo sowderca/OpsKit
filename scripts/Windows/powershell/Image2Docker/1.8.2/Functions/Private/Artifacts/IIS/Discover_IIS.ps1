@@ -1,0 +1,83 @@
+﻿function Discover_IIS {
+<#
+.SYNOPSIS
+Scans for presence of the Internet Information Services (IIS) Web Server 
+
+.PARAMETER MountPath
+The path where the Windows image was mounted to.
+
+.PARAMETER OutputPath
+The filesystem path where the discovery manifest will be emitted.
+
+.PARAMETER ArtifactParam
+Optional - one or more Website names to include in the output.
+#>
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSShouldProcess",'')]
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $true)]
+    [string] $MountPath,
+
+    [Parameter(Mandatory = $true)]
+    [string] $OutputPath,
+
+    [Parameter(Mandatory = $true)]
+    [string] $ImageWindowsVersion,
+
+    [Parameter(Mandatory = $false)]
+    [string[]] $ArtifactParam
+)
+
+    $ArtifactName = Split-Path -Path $PSScriptRoot -Leaf
+    Write-Verbose -Message ('Started discovering {0} artifact' -f $ArtifactName)
+
+    ### Path to the manifest
+    $Manifest = '{0}\{1}.json' -f $OutputPath, $ArtifactName
+
+    ### Create a HashTable to store the results (this will get persisted to JSON)
+    $ManifestResult = @{
+        FeatureName = ''
+        Status = ''
+    }
+
+    # Windows 5.2 -> Server 2003; use MetaBase discovery for IIS 6:
+    if ($ImageWindowsVersion -eq '5.2') {
+        Write-Verbose -Message "Checking IIS MetaBase config for Windows Version: $ImageWindowsVersion"  
+        $ManifestResult = GetManifestFromMetabase -OutputPath $OutputPath -MountPath $MountPath -ImageWindowsVersion $ImageWindowsVersion -ArtifactParam $ArtifactParam
+    }
+    else {
+        # Use Application Host discovery for IIS 7 onwards:
+        Write-Verbose -Message "Checking IIS ApplicationHost config for Windows Version: $ImageWindowsVersion"     
+        $ManifestResult = GetManifestFromApplicationHost -OutputPath $OutputPath -MountPath $MountPath -ImageWindowsVersion $ImageWindowsVersion -ArtifactParam $ArtifactParam
+    }
+
+    # ASP.NET 3.5 apps use the 2.0 runtime so there's no 3.5 reference in config.
+    # Instead check for existence of the 3.5 framework:
+    if (Test-Path "$MountPath\Windows\Microsoft.NET\Framework*\v3.5") {
+        $ManifestResult.AspNet35Status = 'Present'
+    }
+
+    if ($ManifestResult.Status -eq 'Present'){
+        Write-Verbose -Message 'IIS service is present on the system'  
+    }
+    else {
+        Write-Verbose -Message 'IIS service is NOT present on the system'  
+    }
+    if ($ManifestResult.AspNetStatus -eq 'Present'){
+       Write-Verbose -Message 'ASP.NET is present on the system'
+    }
+    else {
+        Write-Verbose -Message 'ASP.NET is NOT present on the system'
+    }
+    if ($ManifestResult.AspNet35Status -eq 'Present'){
+       Write-Verbose -Message '.NET 3.5 is present on the system'
+    }
+    else {
+        Write-Verbose -Message '.NET 3.5 is NOT present on the system'
+    }
+
+    ### Write the result to the manifest file
+    $ManifestResult | ConvertTo-Json -Depth 6 | Set-Content -Path $Manifest
+
+    Write-Verbose -Message ('Finished discovering {0} artifact' -f $ArtifactName)
+}
