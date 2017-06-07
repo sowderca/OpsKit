@@ -7,3 +7,18 @@
 [submodule "include/Windows/DeploymentFiles"]
 	path = include/Windows/DeploymentFiles
 	url = http://tfs.vc3.com:8080/tfs/DefaultCollection/VC3.ITServices/_git/DeploymentFiles
+[submodule "include/Windows/VC3.ITServices"]
+	path = include/Windows/VC3.ITServices
+	url = http://tfs.vc3.com:8080/tfs/DefaultCollection/_git/VC3.ITServices
+[submodule "packages/IISMonitoring"]
+	path = packages/IISMonitoring
+	url = https://github.com/vc3/IISMonitoring.git
+[submodule "packages/ChocolateyNodeJS.extension"]
+	path = packages/ChocolateyNodeJS.extension
+	url = https://github.com/vc3/ChocolateyNodeJS.extension.git
+[submodule "packages/ChocolateyHelpers.extension"]
+	path = packages/ChocolateyHelpers.extension
+	url = https://github.com/vc3/ChocolateyHelpers.extension.git
+[submodule "tools/Windows/Accelerator"]
+	path = tools/Windows/Accelerator
+	url = https://github.com/vc3/Accelerator.git
