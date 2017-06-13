@@ -1,0 +1,6 @@
+Windows Registry Editor Version 5.00
+
+; Disables the lockscreen
+; =======================
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\SessionData]
+"AllowLockScreen"=dword:00000000

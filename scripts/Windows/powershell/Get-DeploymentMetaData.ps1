@@ -7,6 +7,7 @@ $ErrorActionPreference = "SilentlyContinue";
 [string] $deploymentMetaDataLocation = "SOFTWARE\Microsoft\Deployment 4";
 [string] $cloneToolsMetaDataLocation = "SOFTWARE\VC3\CloneTools";
 [string] $agentConfigurationMetaDataLocation = "SOFTWARE\VC3\AgentConfiguration";
+[string] $imageVersionMetaDataLocation = "SOFTWARE\VC3\VOA";
 
 <#
 .SYNOPSIS
@@ -29,7 +30,6 @@ function Get-MetaData {
         [Parameter(Mandatory=$true)]
         [string[]] $RegistryKeys
     )
-    $registryEntry = New-Object -TypeName "psobject";
     foreach ($RegistryKey in $RegistryKeys) {
         if (!(Test-Path -Path "HKLM:\$RegistryKey")) {
             Write-Warning -Message "The registry key $RegistryKey can not be found.";
@@ -41,10 +41,14 @@ function Get-MetaData {
         [string[]] $pathValue = $localKey.OpenSubKey($RegistryKey).GetValueNames();
         # Iterate through the registry values retriving the value
         foreach ($path in $pathValue) {
-            Add-Member -InputObject $registryEntry -MemberType NoteProperty -Name $path -Value $localKey.OpenSubKey($RegistryKey).GetValue($path);
+            # Use DSC's Registry resource as a template for property names.
+            [pscustomobject] @{
+                Key = $RegistryKey
+                ValueName = $path
+                ValueData = $localKey.OpenSubKey($RegistryKey).GetValue($path);
+            }
         }
     }
-    return $registryEntry;
 }
 
 Get-MetaData -RegistryKeys @($deploymentMetaDataLocation, $cloneToolsMetaDataLocation, $agentConfigurationMetaDataLocation);
