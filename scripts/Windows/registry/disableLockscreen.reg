@@ -4,3 +4,23 @@ Windows Registry Editor Version 5.00
 ; =======================
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\SessionData]
 "AllowLockScreen"=dword:00000000
+
+; Requires a password when the computer wakes ( Plugged in )
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51]
+"ACSettingIndex"=dword:00000000
+
+; Require a password when a computer wakes ( On Battery )
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51]
+"DCSettingIndex"=dword:00000000
+
+; Sign-in last interactive user automatically after a system-initiated restart
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System]
+"DisableAutomaticRestartSignOn"=dword:00000000
+
+; Disable the password on the screensaver
+[HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\Control Panel\Desktop]
+"ScreenSaverIsSecure"="0"
+
+; Disable the screensaver
+[HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\Control Panel\Desktop]
+"ScreenSaverActive"="0"
