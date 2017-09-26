@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -e
+
+password=$1
+vncreflector_args=$2
+
+if [ "$password" = "" ] ; then
+    echo "expected password."
+    exit
+fi
+
+host_info_file="/usr/local/ltechagent/vncreflector_host_info"
+
+rm -f $host_info_file
+touch $host_info_file
+chmod u=rw,g=,o= $host_info_file
+echo "localhost:0 $password" > $host_info_file
+
+passwd_file="/usr/local/ltechagent/vncreflector_passwd"
+
+rm -f $passwd_file
+touch $passwd_file
+chmod u=rw,g=,o= $passwd_file
+echo "$password" > $passwd_file
+echo "$password" >> $passwd_file
+
+vncreflector_file="/usr/local/ltechagent/vncreflector"
+
+$vncreflector_file -p $passwd_file $vncreflector_args $host_info_file
+
+exit 0

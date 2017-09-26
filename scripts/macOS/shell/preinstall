@@ -1,0 +1,27 @@
+#!/bin/sh
+
+LOG_FILE="/tmp/ltech_install_log.txt"
+
+echo "Running preinstall." >> $LOG_FILE
+
+echo "Unloading LTSvc from launchd" >> $LOG_FILE
+launchctl unload /Library/LaunchDaemons/com.labtechsoftware.LTSvc.plist
+rm -f /Library/LaunchDaemons/com.labtechsoftware.LTSvc.plist
+
+echo "Unloading LTUpdate from launchd" >> $LOG_FILE
+launchctl unload /Library/LaunchDaemons/com.labtechsoftware.LTUpdate.plist
+rm -f /Library/LaunchDaemons/com.labtechsoftware.LTUpdate.plist
+
+echo "Unloading LTTray from launchd" >> $LOG_FILE
+LOGGEDUSERS=`who | grep console | awk '{ print $1 }'`
+for CURRUSER in $LOGGEDUSERS
+do
+    echo "Unload LTTray from launchd for user $CURRUSER" >> $LOG_FILE
+    su -l $CURRUSER -c 'launchctl unload /Library/LaunchAgents/com.labtechsoftware.LTTray.plist'
+done
+
+rm -f /Library/LaunchAgents/com.labtechsoftware.LTTray.plist
+
+echo "preinstall done." >> $LOG_FILE
+
+exit 0

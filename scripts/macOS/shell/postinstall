@@ -1,0 +1,142 @@
+#!/bin/sh
+
+set -e
+
+LOG_FILE="/tmp/ltech_install_log.txt"
+
+echo "Running postinstall." >> $LOG_FILE
+
+PKG_PATH="$1"
+
+LT_INSTNAME=ltechagent
+LT_BASEDIR=/usr/local/$LT_INSTNAME
+LT_AGENTCONFIG=$LT_BASEDIR/agent_config
+
+old_agent_registry="/usr/LTSvc/AgentRegistry.txt"
+
+config_path="$(dirname "$1")/config.sh"
+
+echo "Sourcing config file" >> $LOG_FILE
+
+source "$config_path"
+
+echo "Installing to: $LT_BASEDIR" >> $LOG_FILE
+echo "Pkg path: $PKG_PATH" >> $LOG_FILE
+echo "Config path: $config_path" >> $LOG_FILE
+echo "With server address: $LT_SERVER_ADDRESS" >> $LOG_FILE
+echo "With location id: $LT_LOCATION_ID" >> $LOG_FILE
+
+echo "Checking for old agent files." >> $LOG_FILE
+
+# Check for old configuration files - update if found
+if [ -f "$old_agent_registry" ]; then
+    echo "Found old agent files." >> $LOG_FILE
+
+    computer_password=""
+    computer_id=""
+    is_master=""
+
+    line=$(grep "computer_passkey" "$old_agent_registry") || true
+    if [ "$line" != "" ]; then
+        computer_password=$(echo "$line" | awk -F '=' '{ print $2 }')
+    fi
+
+    line=$(grep "computer_id" "$old_agent_registry") || true
+    if [ "$line" != "" ]; then
+        computer_id=$(echo "$line" | awk -F '=' '{ print $2 }')
+    fi
+
+    line=$(grep "master" "$old_agent_registry") || true
+    if [ "$line" != "" ]; then
+        is_master=$(echo "$line" | awk -F '=' '{ print $2 }')
+    fi
+
+    echo "Old computer_password: $computer_password" >> $LOG_FILE
+    echo "Old computer_id: $computer_id" >> $LOG_FILE
+    echo "Old master: $master" >> $LOG_FILE
+
+    if [ "$computer_password" != "" ] && [ "$computer_id" != "" ]; then
+        echo "Writing new agent state file using old agent values." >> $LOG_FILE
+
+        # Write the json state file.
+        printf "{" > $LT_BASEDIR/state
+            if [ "$computer_password" != "" ]; then
+                printf "\"computer_password\":\"$computer_password\"" >> $LT_BASEDIR/state
+            fi
+
+            if [ "$computer_id" != "" ]; then
+                if [ "$computer_password" != "" ]; then
+                    printf "," >> $LT_BASEDIR/state
+                fi
+                printf "\"computer_id\":$computer_id" >> $LT_BASEDIR/state
+            fi
+
+            if [ "$is_master" == "1" ]; then
+                if [ "$computer_id" != "" ]; then
+                    printf "," >> $LT_BASEDIR/state
+                fi
+                printf "\"is_master\":true" >> $LT_BASEDIR/state
+            elif [ "$is_master" == "0" ]; then
+                if [ "$computer_id" != "" ]; then
+                    printf "," >> $LT_BASEDIR/state
+                fi
+                printf "\"is_master\":false" >> $LT_BASEDIR/state
+            fi
+        printf "}" >> $LT_BASEDIR/state
+    fi
+fi
+
+# Create a new configuration if there is no configuration
+if [ ! -f "$LT_AGENTCONFIG" ] || [ ! -s "$LT_AGENTCONFIG" ]; then
+    echo "Creating agent config file." >> $LOG_FILE
+
+    echo "server_url $LT_SERVER_ADDRESS" > $LT_AGENTCONFIG
+    echo "system_password $LT_SYSTEM_PASSWORD" >> $LT_AGENTCONFIG
+    echo "server_uploads_path /Labtech/Upload.aspx" >> $LT_AGENTCONFIG
+    echo "server_transfers_path /LabTech/Transfer/" >> $LT_AGENTCONFIG
+    echo "location_id $LT_LOCATION_ID" >> $LT_AGENTCONFIG
+    echo "log_info yes" >> $LT_AGENTCONFIG
+    echo "log_commands yes" >> $LT_AGENTCONFIG
+    echo "log_redirectors yes" >> $LT_AGENTCONFIG
+    echo "log_server_comm yes" >> $LT_AGENTCONFIG
+    echo "log_remote_monitors yes" >> $LT_AGENTCONFIG
+    echo "log_tray_comm yes" >> $LT_AGENTCONFIG
+    echo "log_heartbeat yes" >> $LT_AGENTCONFIG
+fi
+
+touch $LT_BASEDIR/.com.apple.timemachine.supported
+
+# Clean up any remnants of the old version
+if [ -d "/usr/LTSvc" ]; then
+    echo "Cleaning up old agent files." >> $LOG_FILE
+    rm -Rf "/usr/LTSvc"
+fi
+
+echo "Moving launch plist files." >> $LOG_FILE
+mv $LT_BASEDIR/com.labtechsoftware.LTSvc.plist /Library/LaunchDaemons/
+mv $LT_BASEDIR/com.labtechsoftware.LTTray.plist /Library/LaunchAgents/
+
+echo "Setting agent file permissions." >> $LOG_FILE
+
+# Setup permissions since packagemaker doesn't seem to want to
+chown -R root:wheel $LT_BASEDIR
+chmod 600 $LT_AGENTCONFIG
+chmod +x $LT_BASEDIR/start_vncreflector 
+chmod 500 $LT_BASEDIR/uninstaller.sh 
+chown root:wheel "/Library/LaunchDaemons/com.labtechsoftware.LTSvc.plist"
+chmod 644 "/Library/LaunchDaemons/com.labtechsoftware.LTSvc.plist"
+chown root:wheel "/Library/LaunchAgents/com.labtechsoftware.LTTray.plist"
+chmod 644 "/Library/LaunchAgents/com.labtechsoftware.LTTray.plist"
+
+echo "Starting agent." >> $LOG_FILE
+launchctl load -F "/Library/LaunchDaemons/com.labtechsoftware.LTSvc.plist" 
+
+echo "Starting tray." >> $LOG_FILE
+LOGGEDUSERS=`who | grep console | awk '{ print $1 }'`
+
+for curruser in $LOGGEDUSERS
+do
+    su -l $curruser -c 'launchctl load -F /Library/LaunchAgents/com.labtechsoftware.LTTray.plist' || true
+done
+
+echo "postinstall done." >> $LOG_FILE
