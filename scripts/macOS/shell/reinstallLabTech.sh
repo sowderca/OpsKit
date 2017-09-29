@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -e
-
 LT_BASEDIR="/usr/local/ltechagent"
 LT_ADDRESS="https://labtech.vc3.com/Deployment.aspx?installType=mac"
 
